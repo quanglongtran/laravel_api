@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Auth\Middleware\Authenticate as Middleware;
+use Illuminate\Http\Request;
+
+class Authenticate extends Middleware
+{
+    protected $except = ['api/auth/login'];
+
+    /**
+     * Get the path the user should be redirected to when they are not authenticated.
+     */
+    protected function redirectTo(Request $request): ?string
+    {
+        return $request->expectsJson() ? null : route('login');
+    }
+
+    // public function handle($request, Closure $next, ...$guards)
+    // {
+    //     foreach ($this->except as $path) {
+    //         if ($request->path() == $path) {
+    //             return $next($request);
+    //         }
+    //     }
+
+    //     $this->unauthenticated($request, $guards);
+    // }
+}
