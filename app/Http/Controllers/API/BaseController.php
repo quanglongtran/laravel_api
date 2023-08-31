@@ -8,13 +8,31 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
+use function App\Commons\coalesce;
+
 /**
  * @property \App\Repositories\Contracts\BaseRepositoryContract $repository
  */
 class BaseController extends Controller
 {
-    public function customValidate(array $data = [], array $rules = [], array $customMessage = [], array $attributes = [])
+    public function customValidate(array|Request $data = [], array $rules = [], array $customMessage = [], array $attributes = [])
     {
+        if ($data instanceof Request) {
+            $data = $data->all();
+        }
+
+        $dates = [
+            'created_at',
+            'updated_at',
+            'deleted_at',
+        ];
+
+        foreach ($dates as $date) {
+            if (array_key_exists($date, $data)) {
+                $rules[$date] = coalesce($rules, $date, 'date_format:Y-m-d');
+            }
+        }
+
         $relations = collect($data)->filter(fn ($_, $name) => preg_match('/^with_/', $name));
 
         $validator = Validator::make($data, $relations->map(fn () => 'json_object')->merge($rules)->toArray(), $customMessage, $attributes);
