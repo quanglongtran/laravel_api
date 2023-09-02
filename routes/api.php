@@ -55,6 +55,10 @@ Route::prefix('auth')->group(function () {
 
     Route::controller(API\PostThreadController::class)->prefix('post-thread')->group(function () {
         Route::get('/', 'index')->middleware('can:read post thread');
+        Route::post('/', 'store')->middleware('can:insert post thread');
+        Route::match(['put', 'patch'], '/', 'update')->middleware('can:update post thread');
+        Route::delete('/', 'destroy')->middleware('can:delete post thread');
+        Route::patch('restore', 'restore')->middleware('can:update post thread');
     });
 
     Route::controller(API\PostController::class)->prefix('post')->group(function () {
