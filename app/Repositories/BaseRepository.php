@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Commons\CommonConstants;
 use App\Repositories\Contracts\BaseRepositoryContract;
+use Illuminate\Database\Eloquent\Model;
 use JasonGuru\LaravelMakeRepository\Repository\BaseRepository as BaseRepositoryLibrary;
 
 use function App\Commons\coalesce;
@@ -43,9 +44,9 @@ abstract class BaseRepository extends BaseRepositoryLibrary implements BaseRepos
         return $model->paginate($perPage);
     }
 
-    public function restore($id)
+    public function restore($model)
     {
-        return $this->model->where('id', $id)->restore();
+        return $model instanceof Model ? $model->restore() : $this->restore($model);
     }
 
     public function find($id)
@@ -61,5 +62,10 @@ abstract class BaseRepository extends BaseRepositoryLibrary implements BaseRepos
     public function forceDelete($id)
     {
         return $this->model->where('id', $id)->forceDelete();
+    }
+
+    public function softDelete($model)
+    {
+        return $model instanceof Model ? $model->delete() : $this->deleteById($model);
     }
 }

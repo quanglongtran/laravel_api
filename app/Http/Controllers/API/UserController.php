@@ -2,32 +2,17 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
+use App\Http\Requests\API\UserUpdateRequest;
+use App\Repositories\Contracts\UserRepositoryContract;
+use App\Services\Contracts\UserServiceContract;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
 
-class UserController extends Controller
+class UserController extends BaseController
 {
-    public function __construct()
+    public function __construct(protected UserRepositoryContract $repository, protected UserServiceContract $service)
     {
         $this->middleware('auth:api');
-    }
-
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -35,43 +20,24 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        $data = $this->customValidate($request, [
+            'name' => 'required|max:255|unique:users,name',
+            'email' => 'required|max:255|unique:users,email',
+            'password' => 'confirmed'
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    public function profile()
-    {
-        return Response::jsonResponse(true, '', ['user' => Auth::user()]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        return Response::created([
+            'resource' => $this->service->store($data),
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update($model, UserUpdateRequest $request)
     {
-        //
-    }
+        $data = $request->validated();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return Response::updated($this->service->update($model, $data));
     }
 }

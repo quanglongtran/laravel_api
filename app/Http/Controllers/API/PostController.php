@@ -2,23 +2,16 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
+use App\Services\Contracts\PostCategoryServiceContract;
 use App\Repositories\Contracts\PostRepositoryContract;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
 
 class PostController extends BaseController
 {
-    public function __construct(protected PostRepositoryContract $repository)
+    public function __construct(protected PostRepositoryContract $repository, protected PostCategoryServiceContract $service)
     {
         $this->middleware('auth:api');
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -26,38 +19,26 @@ class PostController extends BaseController
      */
     public function store(Request $request)
     {
-        //
-    }
+        $data = $this->customValidate($request, [
+            'name' => 'required|max:255|unique:posts,name',
+            'description' => 'required|max:255',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        return Response::created([
+            'category' => $this->service->store($data),
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update($model, Request $request)
     {
-        //
-    }
+        $data = $this->customValidate($request, [
+            'name' => "string|max:255|unique:posts,name,{$model->id}",
+            'description' => 'string|max:255',
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return Response::updated($this->service->update($model, $data));
     }
 }

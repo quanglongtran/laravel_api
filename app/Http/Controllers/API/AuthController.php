@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Commons\HttpStatusCodes;
+use App\Http\Requests\API\UserUpdateRequest;
 use App\Models\User;
 use App\Repositories\Contracts\AuthRepositoryContract;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use PHPOpenSourceSaver\JWTAuth\Token;
 
@@ -27,10 +29,10 @@ class AuthController extends BaseController
         $token = JWTAuth::attempt($validated);
 
         if (!$token) {
-            return response()->jsonResponse(false, 'Incorrect account or password', [], HttpStatusCodes::HTTP_UNAUTHORIZED);
+            return Response::jsonResponse(false, 'Incorrect account or password', [], HttpStatusCodes::HTTP_UNAUTHORIZED);
         }
 
-        return response()->jsonResponse(true, 'Logged in successfully', $this->createNewToken($token));
+        return Response::jsonResponse(true, 'Logged in successfully', $this->createNewToken($token));
     }
 
     public function register(Request $request)
@@ -43,18 +45,28 @@ class AuthController extends BaseController
 
         $user = User::create($validated);
 
-        return response()->jsonResponse(true, 'User created successfully', ['user' => $user], HttpStatusCodes::HTTP_CREATED);
+        return Response::jsonResponse(true, 'User created successfully', ['user' => $user], HttpStatusCodes::HTTP_CREATED);
+    }
+
+    public function profile()
+    {
+        return Response::resource(Auth::user());
+    }
+
+    public function update(UserUpdateRequest $request)
+    {
+        return Response::updated(tap(Auth::user(), fn ($user) => $user->update($request->validated())));
     }
 
     public function logout()
     {
         Auth::logout();
-        return response()->jsonResponse(true, 'Successfully logged out');
+        return Response::jsonResponse(true, 'Successfully logged out');
     }
 
     public function refresh()
     {
-        return response()->jsonResponse(true, 'Refreshing success', $this->createNewToken(Auth::refresh()));
+        return Response::jsonResponse(true, 'Refreshing success', $this->createNewToken(Auth::refresh()));
     }
 
     public function createNewToken(string $token)
@@ -63,14 +75,9 @@ class AuthController extends BaseController
             'user' => Auth::user(),
             'authorization' => [
                 'token' => $token,
-                'type' => 'bearer',
+                'type' => 'Bearer',
                 'expired_at' => JWTAuth::decode(new Token($token))->get('exp'),
             ]
         ];
-    }
-
-    public function roles(Request $request)
-    {
-        return $this->index($request, 'roles');
     }
 }

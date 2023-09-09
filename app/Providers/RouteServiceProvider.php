@@ -19,6 +19,15 @@ class RouteServiceProvider extends ServiceProvider
      */
     public const HOME = '/home';
 
+    public const EXPLICIT_BINDINGS = [
+        'postCategory' => \App\Models\PostCategory::class,
+        'postThread' => \App\Models\PostThread::class,
+        'post' => \App\Models\Post::class,
+        'role' => \App\Models\Role::class,
+        'permission' => \App\Models\Permission::class,
+        'user' => \App\Models\User::class,
+    ];
+
     /**
      * Define your route model bindings, pattern filters, and other route configuration.
      */
@@ -36,5 +45,17 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
         });
+
+        Route::pattern('model', '\d+');
+
+        foreach (self::EXPLICIT_BINDINGS as $name => $class) {
+            Route::model($name, $class);
+            Route::model(
+                "{$name}WithTrashed",
+                $class,
+                fn ($id) =>
+                $class::withTrashed()->findOrFail($id)
+            );
+        }
     }
 }

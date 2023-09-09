@@ -31,4 +31,9 @@ class Permission extends BasePermission implements \Spatie\Permission\Contracts\
             new \App\Models\Filters\ExactFilter('guard_name', $this->filters),
         ];
     }
+
+    public function setGuardNameAttribute()
+    {
+        $this->attributes['guard_name'] = 'api';
+    }
 }
