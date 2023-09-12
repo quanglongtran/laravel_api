@@ -11,6 +11,14 @@ class Post extends Model
 {
     use HasFactory, SoftDeletes, Filterable;
 
+    protected $fillable = [
+        'name',
+        'content',
+        'post_thread_id',
+        'user_id',
+        'tags',
+    ];
+
     protected function getFilters()
     {
         return [

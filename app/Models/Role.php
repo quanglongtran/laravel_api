@@ -33,4 +33,9 @@ class Role extends BaseRole implements \Spatie\Permission\Contracts\Role
             new \App\Models\Filters\ExactFilter('guard_name', $this->filters),
         ];
     }
+
+    public function setGuardNameAttribute()
+    {
+        $this->attributes['guard_name'] = 'api';
+    }
 }

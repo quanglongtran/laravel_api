@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Role;
 use App\Repositories\Contracts\RoleRepositoryContract;
 use App\Services\Contracts\RoleServiceContract;
 
@@ -12,24 +13,27 @@ class RoleService extends BaseService implements RoleServiceContract
         //
     }
 
-    public function givePermissionTo($id, $permissionIds)
+    public function givePermissionTo($model, $permissionNames)
     {
-        $role = $this->repository->with('permissions')->findOrFail($id);
-
-        return $role->givePermissionTo($permissionIds);
+        return tap(
+            $model instanceof Role ? $model : $this->repository->findOrFail($model),
+            fn ($role) => $role->givePermissionTo($permissionNames)
+        );
     }
 
-    public function syncPermissions($id, $permissionIds)
+    public function syncPermissions($model, $permissionNames)
     {
-        $role = $this->repository->with('permissions')->findOrFail($id);
-
-        return $role->syncPermissions($permissionIds);
+        return tap(
+            $model instanceof Role ? $model : $this->repository->findOrFail($model),
+            fn ($role) => $role->syncPermissions($permissionNames)
+        );
     }
 
-    public function revokePermissionTo($id, $permissionIds)
+    public function revokePermissionTo($model, $permissionNames)
     {
-        $role = $this->repository->with('permissions')->findOrFail($id);
-
-        return $role->revokePermissionTo($permissionIds);
+        return tap(
+            $model instanceof Role ? $model : $this->repository->findOrFail($model),
+            fn ($role) => $role->revokePermissionTo($permissionNames)
+        );
     }
 }

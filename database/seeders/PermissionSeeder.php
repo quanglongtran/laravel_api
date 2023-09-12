@@ -37,7 +37,7 @@ class PermissionSeeder extends Seeder
         ];
 
         $dataPermission = collect($crudPermissions)->map(
-            fn ($permission) => ["insert $permission", "read $permission", "update $permission", "delete $permission"]
+            fn ($permission) => ["insert $permission", "read $permission", "update $permission", "soft delete $permission", "force delete $permission"]
         )
             ->flatten()
             ->merge($permissions)

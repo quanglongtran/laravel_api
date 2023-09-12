@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\API;
 
 use App\Repositories\Contracts\PostCategoryRepositoryContract;
+use App\Services\Contracts\PostCategoryServiceContract;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 
 class PostCategoryController extends BaseController
 {
-    public function __construct(protected PostCategoryRepositoryContract $repository)
+    public function __construct(protected PostCategoryRepositoryContract $repository, protected PostCategoryServiceContract $service)
     {
         $this->middleware('auth:api');
     }
@@ -18,29 +19,26 @@ class PostCategoryController extends BaseController
      */
     public function store(Request $request)
     {
-        $data = $this->customValidate($request->all(), [
+        $data = $this->customValidate($request, [
             'name' => 'required|max:255|unique:post_categories,name',
             'description' => 'required|max:255',
         ]);
 
         return Response::created([
-            'category' => $this->repository->create($data),
+            'category' => $this->service->store($data),
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
+    public function update($model, Request $request)
     {
-        $data = $this->customValidate($request->all(), [
-            'id' => 'required|integer|exists:post_categories,id',
-            'name' => "string|max:255|unique:post_categories,name,{$request->id}",
+        $data = $this->customValidate($request, [
+            'name' => "string|max:255|unique:post_categories,name,{$model->id}",
             'description' => 'string|max:255',
         ]);
 
-        return Response::updated([
-            'category' => $this->repository->updateById($request->id, $data),
-        ]);
+        return Response::updated($this->service->update($model, $data));
     }
 }

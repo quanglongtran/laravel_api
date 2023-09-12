@@ -41,7 +41,7 @@ class BaseController extends Controller
             throw new ValidationException($validator);
         }
 
-        return $data;
+        return $validator->validated();
     }
 
     /**
@@ -49,43 +49,58 @@ class BaseController extends Controller
      */
     public function index(Request $request, string $resourceName = 'resource')
     {
-        $data = $request->all();
-        $this->customValidate($data, []);
-
-        $resource = $this->repository->filter($data);
+        $this->customValidate($request);
+        $resource = $this->repository->filter($request->all());
 
         return Response::jsonResponse(true, "Returned a list of {$resource->count()} records", [
-            $resourceName => $this->repository->filter($data)
+            $resourceName => $resource
         ]);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Display the specified resource.
      */
-    public function destroy(Request $request)
+    public function show($model)
     {
-        $this->customValidate($request->all(), [
-            'id' => "required|integer|exists:{$this->repository->getTable()},id",
-        ]);
+        return Response::resource($model);
+    }
 
-        $this->repository->forceDelete($request->id);
+    /**
+     * Remove the specified resource from storage.
+     * 
+     * @param \Illuminate\Database\Eloquent\Model $model
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function destroy($model)
+    {
+        return tap(Response::deleted(), fn () => $model->forceDelete());
+    }
 
-        return Response::deleted();
+    /**
+     * Softly deletes a record from the data table
+     * 
+     * @param \Illuminate\Database\Eloquent\Model $model
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function delete($model)
+    {
+        return tap(Response::deleted(), fn () => $model->delete());
     }
 
     /**
      * Restore a soft-deleted model instance.
      *
-     * @return bool
+     * @param \Illuminate\Database\Eloquent\Model $model
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function restore(Request $request)
+    public function restore($model)
     {
-        $this->customValidate($request->all(), [
-            'id' => "required|integer|exists:{$this->repository->getTable()},id",
-        ]);
+        return tap(Response::restored($model), fn () => $model->restore());
+    }
 
-        $this->repository->restore($request->id);
-
-        return Response::jsonResponse(true, 'Resource recovery successful');
+    // Fallback
+    public function __call($method, $parameters)
+    {
+        return Response::developing();
     }
 }

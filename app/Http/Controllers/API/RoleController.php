@@ -4,7 +4,6 @@ namespace App\Http\Controllers\API;
 
 use App\Repositories\Contracts\RoleRepositoryContract;
 use App\Services\Contracts\RoleServiceContract;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 
@@ -20,78 +19,62 @@ class RoleController extends BaseController
      */
     public function store(Request $request)
     {
-        $data = $this->customValidate($request->except('guard_name'), [
-            'name' => 'required|max:255|unique:post_categories,name',
+        $data = $this->customValidate($request, [
+            'name' => 'required|max:255|unique:roles,name',
             'display_name' => 'nullable|max:255',
         ]);
 
-        if ($request->deleted_at) {
-            $data['deleted_at'] = Carbon::parse($request->deleted_at)->format('Y-m-d H:i:s');
-        }
-
-        $data['guard_name'] = 'api';
-
         return Response::created([
-            'category' => $this->repository->create($data),
+            'role' => $this->service->store($data),
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
+    public function update($model, Request $request)
     {
-        $data = $this->customValidate($request->all(), [
-            'id' => 'required|integer|exists:roles,id',
-            'name' => 'max:255|unique:roles,name',
+        $data = $this->customValidate($request, [
+            'name' => "max:255|unique:roles,name,$model->id",
             'display_name' => 'nullable|max:255',
-            'deleted_at' => 'nullable|regex:#\d{4}[-/]\d{2}[-/]\d{2}(?: \d{2}(?::\d{2}){2})?$#',
         ]);
 
-        if ($request->deleted_at) {
-            $data['deleted_at'] = Carbon::parse($request->deleted_at)->format('Y-m-d H:i:s');
-        }
-
-        $data['guard_name'] = 'api';
-
-        return Response::updated([
-            'category' => $this->repository->updateById($request->id, $data),
-        ]);
+        return Response::updated($this->service->update($model, $data));
     }
 
-    public function givePermissionTo(Request $request)
+    public function givePermissionTo($model, Request $request)
     {
-        $this->customValidate($request->all(), [
-            'id' => 'required|integer|exists:roles,id',
-            'permission_ids' => 'required|array',
+        $data = $this->customValidate($request, [
+            'permission_names' => 'required|array',
         ]);
 
-        $role = $this->service->givePermissionTo($request->id, $request->permission_ids);
-
-        return Response::jsonResponse(true, 'bla bla', [$role]);
+        return Response::resource(
+            $this->service->givePermissionTo($model, $data),
+            'Permission has been successfully added to the role.'
+        );
     }
 
-    public function syncPermissions(Request $request)
+    public function syncPermissions($model, Request $request)
     {
-        $this->customValidate($request->all(), [
-            'id' => 'required|integer|exists:roles,id',
-            'permission_ids' => 'required|array',
+        $data = $this->customValidate($request, [
+            'permission_names' => 'required|array',
         ]);
 
-        $role = $this->service->syncPermissions($request->id, $request->permission_ids);
-
-        return Response::jsonResponse(true, 'bla bla', [$role]);
+        return Response::resource(
+            $this->service->syncPermissions($model, $data),
+            'Permissions have been successfully synchronized for the role.'
+        );
     }
 
-    public function revokePermissionTo(Request $request)
+    public function revokePermissionTo($model, Request $request)
     {
-        $this->customValidate($request->all(), [
-            'id' => 'required|integer|exists:roles,id',
-            'permission_ids' => 'required|array',
+        $data = $this->customValidate($request, [
+            'permission_names' => 'required|array',
         ]);
 
-        $role = $this->service->revokePermissionTo($request->id, $request->permission_ids);
-
-        return Response::jsonResponse(true, 'bla bla', [$role]);
+        return Response::resource(
+            $this->service->revokePermissionTo($model, $data),
+            'Permission has been successfully removed from the role.'
+        );
     }
 }

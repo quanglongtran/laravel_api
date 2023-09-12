@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Throwable;
 
@@ -53,7 +54,7 @@ class Handler extends ExceptionHandler
             }
 
             if ($exception instanceof \Illuminate\Auth\Access\AuthorizationException) {
-                return Response::jsonResponse(false, $exception->getMessage(), [], HttpStatusCodes::HTTP_FORBIDDEN);
+                return Response::jsonResponse(false, 'You do not have the required authorization.', [], HttpStatusCodes::HTTP_FORBIDDEN);
             }
 
             if ($exception instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException) {
@@ -70,6 +71,10 @@ class Handler extends ExceptionHandler
 
             if ($exception instanceof \Spatie\Permission\Exceptions\PermissionDoesNotExist) {
                 return Response::jsonResponse(false, $exception->getMessage(), [], HttpStatusCodes::HTTP_NOT_FOUND);
+            }
+
+            if ($exception instanceof \Illuminate\Database\QueryException) {
+                return Response::jsonResponse(false, $exception->getMessage(), [], HttpStatusCodes::HTTP_UNPROCESSABLE_ENTITY);
             }
 
             logger($exception);

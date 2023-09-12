@@ -2,7 +2,7 @@
 
 namespace App\Repositories\Contracts;
 
-interface BaseRepositoryContract
+interface BaseRepositoryContract extends \JasonGuru\LaravelMakeRepository\Repository\RepositoryContract
 {
     /**
      * Get table name
@@ -36,12 +36,12 @@ interface BaseRepositoryContract
     public function findOrFail($id);
 
     /**
-     * restore
-     *
-     * @param  int $id
-     * @return bool
+     * bla bla
+     * 
+     * @param int|Model $model Id or instance of model
+     * @return bool|null
      */
-    public function restore($id);
+    public function restore($model);
 
     /**
      * force delete
@@ -50,4 +50,12 @@ interface BaseRepositoryContract
      * @return bool
      */
     public function forceDelete($id);
+
+    /**
+     * bla bla
+     * 
+     * @param int|Model $model Id or instance of model
+     * @return bool|null
+     */
+    public function softDelete($model);
 }
