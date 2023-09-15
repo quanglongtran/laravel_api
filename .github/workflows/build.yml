@@ -2,6 +2,9 @@ name: Build
 
 on:
   push:
+    branches:
+      - master
+      - workflows
 
 
 jobs:
@@ -23,3 +26,12 @@ jobs:
       #   timeout-minutes: 5
       #   env:
       #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts
+
+      - name: Run PHP_CodeSniffer
+        run: vendor/bin/phpcs --standard=PSR2 app/
+
+      - name: Review code
+        if: failure()
+        run: echo "Mã nguồn không tuân thủ các quy tắc PHP_CodeSniffer."
